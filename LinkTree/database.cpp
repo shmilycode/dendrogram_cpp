@@ -6,7 +6,8 @@ using namespace std;
 
 mysql_connector::mysql_connector()
 {
-	mysql_init(&MySQL);
+	if (mysql_init(&MySQL) == NULL)
+		cerr << "Error: Mysql initial faild!" << std::endl;
 }
 
 mysql_connector::~mysql_connector()
@@ -22,7 +23,7 @@ void mysql_connector::destroy_resource()
 
 bool mysql_connector::connect(const string &host, const string &username, const string &pwd, const string &dbname)
 {
-	if (!mysql_real_connect(&MySQL, host.c_str(), username.c_str(),  dbname.c_str(), pwd.c_str(), 3306, NULL, 0))
+	if (!mysql_real_connect(&MySQL, host.c_str(), username.c_str(), pwd.c_str(), dbname.c_str(), 3306, NULL, 0))
 	{
 		cerr << "Error connect to database: " << mysql_error(&MySQL) << endl;
 		return false;
@@ -59,10 +60,10 @@ MYSQL_RES *mysql_connector::query(const string &QueryStr)
 	}
 }
 
-MYSQL_RES *mysql_connector::query_ip(const string &table_name, const string &ip)
+MYSQL_RES *mysql_connector::query_by_ip(const string &table_name, const string &ip)
 {
 	string QueryStr = "select * from " + table_name;
-	QueryStr += " where ip=\"" + ip + "\"";
+	QueryStr += " where userIp=\"" + ip + "\"";
 
 	return query(QueryStr);
 }
@@ -70,5 +71,12 @@ MYSQL_RES *mysql_connector::query_ip(const string &table_name, const string &ip)
 MYSQL_RES *mysql_connector::query_all(const string &table_name)
 {
 	string QueryStr = "select * from " + table_name;
+	return query(QueryStr);
+}
+
+MYSQL_RES *mysql_connector::query_all_ip(const string &table_name)
+{
+	string QueryStr = "select userIp from " + table_name;
+	QueryStr += " group by userIp order by userIp";
 	return query(QueryStr);
 }

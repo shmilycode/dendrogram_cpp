@@ -9,11 +9,7 @@
 #include <regex>
 using namespace std;
 
-const string host = "120.27.110.28";
-const string username = "root";
-const string pwd = "weiqi123";
-const string dbname = "chrome";
-const string tablename = "user_data_student_test";
+
 const int URL_COL = 1;
 const int OPT_TYPE_COL = 2;
 const int OPT_COL = 3;

@@ -6,12 +6,13 @@ using namespace std;
 
 node::node()
 {
-	parent = NULL;
+	Parent = NULL;
 }
 dendrogram::dendrogram()
 {
-	Root[""] = new(std::nothrow) node();
 	SortOptCount = 0;
+	Duration = 0;
+	PreStartTime = 0;
 }
 dendrogram::~dendrogram()
 {
@@ -23,7 +24,7 @@ dendrogram::~dendrogram()
 	}
 }
 
-pNode dendrogram::add_node(const string &CurUrl, const string &SortType, const string &OptStr, const string &NextUrl)
+pNode dendrogram::add_node(const string &CurUrl, const string &SortType, const string &OptStr, const string &NextUrl, const time_t &StartTime)
 {
 	if (CurUrl.empty())
 		return false;
@@ -40,17 +41,27 @@ pNode dendrogram::add_node(const string &CurUrl, const string &SortType, const s
 	{
 		CurNode->OptStr.push_back(OptStr);
 	}
+	if (StartTime)
+	{
+		double DiffTime = difftime(StartTime, PreStartTime);
+		//将大于10分钟的时间间隔舍弃
+		if (DiffTime < TenMinute)
+		{
+			Duration += DiffTime;
+		}
+		PreStartTime = StartTime;
+	}
 	if (!NextUrl.empty())
 	{
-		pNode NextNode = add_node(NextUrl, string(), string(), string());
+		pNode NextNode = add_node(NextUrl, string(), string(), string(), 0);
 		if (NextNode)
 		{
 			//防止增加相同的子树
 			//已经存在父节点的子树则不增加
-			if (!is_child_exist(CurNode, NextNode) && !NextNode->parent)
+			if (!is_child_exist(CurNode, NextNode) && !NextNode->Parent)
 			{
-				CurNode->children.push_back(NextNode);
-				NextNode->parent = CurNode;
+				CurNode->Children.push_back(NextNode);
+				NextNode->Parent = CurNode;
 			}
 		}
 		
@@ -64,7 +75,7 @@ int dendrogram::leaf_count()
 	int LeafCount = 0;
 	for (NodeIte = Nodes.begin(); NodeIte != Nodes.end(); NodeIte++)
 	{
-		if (NodeIte->second->children.empty())
+		if (NodeIte->second->Children.empty())
 		{
 			LeafCount++;
 		}
@@ -117,11 +128,16 @@ int dendrogram::get_sort_opt_count()
 	return SortOptCount;
 }
 
+time_t dendrogram::get_duration()
+{
+	return Duration;
+}
+
 bool dendrogram::is_child_exist(pNode Parent, pNode Child)
 {
 	if (!Parent || !Child)
 		return false;
-	vector<pNode> Children = Parent->children;
+	vector<pNode> Children = Parent->Children;
 	if (Children.empty())
 		return false;
 
